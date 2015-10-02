@@ -1,6 +1,6 @@
 
 parameters {
-  real x_raw;
+  real<lower=-pi()/2,upper=pi()/2> x_raw;
 }
 
 transformed parameters {
@@ -9,7 +9,7 @@ transformed parameters {
 }
 
 model {
-  // z ~ unif(); // implied!
+  // x_raw ~ uniform(-.5*pi(),.5*pi);    // implied.
 }
 
 

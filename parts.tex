@@ -1,0 +1,21 @@
+
+
+
+1. What is Stan?
+ - HMC/L-BFGS/ADVI/...? 
+   - memory/cpu efficient
+	 - use objective function + gradients
+	 - esp. HMC, efficient in the face of high-dimensional parameter spaces and 
+	   complex covariances among parmeters (advance over slice sampling, 
+		 Gibbs, M-H, etc...)
+ - Stan language for specifying objective function (posterior/likelihood/etc...)
+   - Stan -> .cpp -> executable
+ - Auto-differentiation in math library for calculating gradients of the 
+     objective function (so you don't have to!)
+ - Amazing mailing list for modeling questions.
+ - Interfaces to everything*, with documentation.
+ - Well documented API for math library, ok API for everything else.
+
+
+
+

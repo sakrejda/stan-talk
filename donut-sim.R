@@ -1,3 +1,10 @@
+library("ggplot2"); library("tidyr"); library("rstan")
+
+r_mu = 8
+r_sd = 1
+
+
+
 #' bivariate donut
 #' 
 #' \theta ~ U(0,2*pi)
@@ -28,10 +35,7 @@ d_bivariate_donut <- function(x, y, r_mu=1, r_sd=r_mu/4, log=TRUE) {
 		return(prod(cds))
 }
 
-r_mu = 5
-r_sd = 1
-
-library(ggplot2)
+#' What does direct simulation do?
 draw_donut <- data.frame(r_bivariate_donut(10^3, r_mu, r_sd))
 
 pl_sim <- ggplot(data=draw_donut, aes(x=x, y=y)) + 
@@ -99,23 +103,45 @@ donut_metropolis <- function(n_iter, xy_init, theta, sd_proposal) {
 }
 
 #' sample:
-o <- donut_metropolis(1000, c(x=-5, y=0), c(r_mu=r_mu,r_sd=r_sd),1) %>% t %>% data.frame
+o <- donut_metropolis(200, c(x=-r_mu, y=0), c(r_mu=r_mu,r_sd=r_sd),2.5) %>% t %>% data.frame
 
 #' define a x/y grid:
-a_grid <- expand.grid(x=seq(-8,8,l=50), y=seq(-8,8,l=50)) %>% data.frame
+a_grid <- expand.grid(x=seq(-1.5*r_mu,1.5*r_mu,l=50), y=seq(-1.5*r_mu,1.5*r_mu,l=50)) %>% data.frame
 a_grid[['log_d']] <- apply(a_grid, 1, function(row) d_bivariate_donut(row['x'], row['y'],r_mu, r_sd,log=FALSE))
 
 pl_sad_metropolis <- ggplot() + 
   geom_contour(data=a_grid, aes(x=x, y=y, z=log_d)) + 
   geom_path(data=o, aes(x=x, y=y, colour=log_d)) + 
   geom_point(data=o, aes(x=x, y=y)) + theme_minimal() + 
-  coord_cartesian(xlim=c(-10,10), ylim=c(-10,10))
+  coord_cartesian(xlim=c(-15,15), ylim=c(-15,15))
 
-pl_sad_metropolis_trace <- ggplot(data=o %>% gather(parameter, value, x, y, r, s, log_d), aes(x=iter, y=value)) +
+pl_sad_metropolis_traces <- ggplot(data=o %>% gather(parameter, value, x, y, r, s, log_d), aes(x=iter, y=value)) +
   facet_grid( parameter ~ ., scales='free_y') + geom_line() + theme_minimal() + 
   theme(strip.text.y=element_text(angle=0))
 
 print(pl_sad_metropolis)
+print(pl_sad_metropolis_traces)
+
+#' Would adaptive Metropolis do better?
 print(cov(draw_donut))
+
+#' How does NUTS do?
+m1 <- stan('donut-sim.stan', chains=1, data=list(r_mu=r_mu, r_sd=r_sd), iter=200)
+s1 <- extract(m1, inc_warmup=TRUE, permuted=FALSE)
+s1df <- s1[,1,] %>% data.frame %>% mutate(iteration=1:nrow(.)) 
+
+pl_naive_stan <- ggplot() + 
+  geom_contour(data=a_grid, aes(x=x, y=y, z=log_d)) + 
+  geom_path(data=s1df, aes(x=x, y=y, colour=lp__)) + 
+  geom_point(data=s1df, aes(x=x, y=y)) + theme_minimal() + 
+  coord_cartesian(xlim=c(-1.5*r_mu,1.5*r_mu), ylim=c(-1.5*r_mu,1.5*r_mu))
+
+pl_naive_stan_traces <- ggplot(data=s1df %>% gather(parameter, value, x, y, lp__), aes(x=iteration, y=value)) +
+  facet_grid( parameter ~ ., scales='free_y') + geom_line() + theme_minimal() + 
+  theme(strip.text.y=element_text(angle=0))
+
+print(pl_naive_stan)
+print(pl_naive_stan_traces)
+
 
 

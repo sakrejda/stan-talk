@@ -166,20 +166,29 @@ pl_J_stan_traces <- ggplot(data=s2df %>% gather(parameter, value, theta, r, x, y
 print(pl_J_stan)
 print(pl_J_stan_traces)
 
+
+
+
+
 #' NUTS to NUTS comparison:
 #' 
+m1 <- stan('donut-sim.stan', chains=1, data=list(r_mu=r_mu, r_sd=r_sd), iter=5000)
+s1 <- extract(m1, inc_warmup=TRUE, permuted=FALSE)
+s1df <- s1[,1,] %>% data.frame %>% mutate(iteration=1:nrow(.), jacobian="missing",r=sqrt(x^2+y^2), theta=acos(x/r))
 
+#' How does NUTS do with the 'right' model...?
+m2 <- stan('donut-sim-corrected.stan', chains=1, data=list(r_mu=r_mu, r_sd=r_sd), iter=5000)
+s2 <- extract(m2, inc_warmup=TRUE, permuted=FALSE)
+s2df <- s2[,1,] %>% data.frame %>% mutate(iteration=1:nrow(.), jacobian="present",r=sqrt(x^2+y^2), theta=acos(x/r)) 
 
 pl_compare <- ggplot(
   data=rbind(s1df, s2df) %>% gather(parameter, value, theta, r, x, y, lp__) %>% filter(parameter %in% 'r'),
   aes(x=value)
-) + geom_histogram(binwidth=.1) + facet_grid(jacobian ~ parameter, scales='free')
+) + geom_histogram(binwidth=.1) + facet_grid(jacobian ~ parameter, scales='free') + 
+    theme_minimal() +  theme(strip.text.y=element_text(angle=0))
 
-data_compare <- rbind(s1df, s2df) %>% gather(parameter, value, theta, r, x, y, lp__) %>% filter(parameter=='r', iteration > (max(iteration)/2)) %>% spread(jacobian, value)
-pl_compare_r <- ggplot(data=data_compare, aes(x=missing, y=present)) + geom_point() + coord_fixed()
 
-print(pl_compare_r)
-
+#' Produce plots:
 
 output_store <- '~/output-store/stan-talk'
 pdf(file=file.path(output_store,'donut-density.pdf'), width=8, height=6, useDingbats=FALSE)
@@ -190,4 +199,9 @@ print(pl_sad_metropolis); dev.off()
 
 pdf(file=file.path(output_store,'J-stan.pdf'), width=8, height=6, useDingbats=FALSE)
 print(pl_J_stan); dev.off()
+
+
+pdf(file=file.path(output_store,'Jacobian-adjustemnt.pdf'), width=8, height=6, useDingbats=FALSE)
+print(pl_compare); dev.off()
+
 

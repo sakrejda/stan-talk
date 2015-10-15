@@ -12,7 +12,6 @@ model {
   real r;
   r <- sqrt(x^2+y^2);
   r ~ normal(r_mu, r_sd);
-  increment_log_prob
 }
 
 

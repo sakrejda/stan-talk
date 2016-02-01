@@ -23,7 +23,7 @@ for ( i in 2:n_obs ) {
   x[i] <- rnorm(1,beta*x[i-1], sigma)
 }
 
-m1 <- stan('non-stationary-ar-fix-3.stan', chains=10, data=list(
+m1 <- stan('non-stationary-ar-fix-4.stan', chains=10, data=list(
   n_obs=n_obs, x=x), iter=n_iterations); 
 s1 <- rstan::extract(m1, inc_warmup=TRUE, permuted=FALSE)
 dimnames(s1)[['iterations']] <- as.character(1:n_iterations)

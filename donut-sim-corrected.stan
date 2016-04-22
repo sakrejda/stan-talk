@@ -15,7 +15,6 @@ model {
   r <- sqrt(x^2+y^2);
   r ~ normal(r_mu, r_sd);
   
-  # Sigh, this model needs more maths:
   J[1,1] <- x/sqrt(x^2+y^2);
   J[1,2] <- y/sqrt(x^2+y^2);
   J[2,1] <- (x^2*(x^2+y^2)^(-3.0/2.0) - (x^2+y^2)^(-1.0/2.0)) / sqrt(1-(x^2)/(x^2+y^2));
